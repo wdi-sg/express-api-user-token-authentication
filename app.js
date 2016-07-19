@@ -21,17 +21,17 @@ app.use(function (req, res, next) {
 })
 
 app.post('/signup', (req, res) => {
-  const user = new User(req.body.user)
+  const user = new User(req.body)
 
   user.save((err, user) => {
-    if (err) return res.status(401).json({error: err.message})
+    if (err) return res.status(422).json({error: err.message})
 
     res.status(201).json({message: 'user created', auth_token: user.auth_token})
   })
 })
 
 app.post('/signin', (req, res) => {
-  const userParams = req.body.user
+  const userParams = req.body
 
   User.findOne({email: userParams.email}, (err, user) => {
     if (err || !user) return res.status(401).json({error: 'email or password is invalid'})
@@ -48,17 +48,18 @@ app.post('/signin', (req, res) => {
 app.get('/', (req, res) => {
   res.status(200).json({message: 'hello'})
 })
-
 // secret routes
 app.get('/secret', appController.userLoggedIn, (req, res) => {
   res.status(200).json({secret: 'content'})
 })
-app.post('/secret', appController.userLoggedIn, (req, res) => {
-  res.status(200).json({secret: 'hello ' + req.currentUser.name})
+// get the currently logged in user
+app.get('/user', appController.userLoggedIn, (req, res) => {
+  res.status(200).json({name: 'Jeremiah'})
 })
 
 // user specific route
 app.get('/users-secret', appController.userLoggedIn, (req, res) => {
+  // comparing against a hardcoded id but in reality would be checking a ref-id from a db record e.g. post.owner_id
   if (req.currentUser.id !== '5785df577262545a997485b9') {
     return res.status(401).json({error: 'unauthorised'})
   }
