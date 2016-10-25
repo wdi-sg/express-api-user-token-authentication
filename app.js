@@ -52,13 +52,17 @@ app.get('/', (req, res) => {
 app.get('/secret', appController.userLoggedIn, (req, res) => {
   res.status(200).json({secret: 'content'})
 })
+
+// alternatively middleware can be used to protect all routes below it
+app.use(appController.userLoggedIn)
+
 // get the currently logged in user
-app.get('/user', appController.userLoggedIn, (req, res) => {
-  res.status(200).json({name: 'Jeremiah'})
+app.get('/user', (req, res) => {
+  res.status(200).json({name: req.currentUser.name})
 })
 
-// user specific route
-app.get('/users-secret', appController.userLoggedIn, (req, res) => {
+// add extra protection, so only specific use can access route
+app.get('/users-secret', (req, res) => {
   // comparing against a hardcoded id but in reality would be checking a ref-id from a db record e.g. post.owner_id
   if (req.currentUser.id !== '5785df577262545a997485b9') {
     return res.status(401).json({error: 'unauthorised'})

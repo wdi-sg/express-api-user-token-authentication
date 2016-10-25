@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
-
-const uuid = require('uuid');
+const crypto = require('crypto')
+const base64url = require('base64url')
 
 const UserSchema = new mongoose.Schema({
   name: { type: String },
@@ -22,12 +22,15 @@ UserSchema.pre('save', function (done) {
       if (err) return done(err)
 
       user.password = hash
-      done()
+
+      crypto.randomBytes(64, (err, buf) => {
+        if (err) done(err)
+        // generate auth_token
+        user.auth_token = base64url(buf)
+        done()
+      })
     })
   })
-
-  // generate token
-  user.auth_token = uuid.v4()
 })
 
 UserSchema.methods.authenticate = function (password, callback) {
