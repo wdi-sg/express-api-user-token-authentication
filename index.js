@@ -57,14 +57,14 @@ app.use(appController.userLoggedIn)
 
 // get the currently logged in user
 app.get('/user', (req, res) => {
-  res.status(200).json({name: req.currentUser.name, email: req.currentUser.email})
+  res.status(200).json({name: req.user.name, email: req.user.email})
 })
 
 // add extra protection, so only specific use can access route
 app.get('/users-secret', (req, res) => {
   // comparing against a hardcoded id but in reality we would likely be checking a ref-id from a db record e.g. post.owner_id
-  if (req.currentUser.id !== '58a510e5a325ac20eece5341') {
-    console.log(req.currentUser.id)
+  if (req.user.id !== '58a510e5a325ac20eece5341') {
+    console.log(req.user.id)
     return res.status(401).json({error: 'unauthorised'})
   }
   // else

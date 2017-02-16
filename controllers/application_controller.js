@@ -5,13 +5,12 @@ const basicAuth = require('basic-auth')
 function userLoggedIn (req, res, next) {
   const userEmail = req.get('User-Email')
   const authToken = req.get('Auth-Token')
-  console.log(basicAuth)
   if (!userEmail || !authToken) return res.status(401).json({error: 'unauthorised'})
 
   User.findOne({email: userEmail, auth_token: authToken}, (err, user) => {
     if (err || !user) return res.status(401).json({error: 'unauthorised'})
 
-    req.currentUser = user
+    req.user = user
     next()
   })
 }
@@ -36,7 +35,7 @@ function userLoggedInAdvanced (req, res, next) {
   User.findOne({email: userEmail, auth_token: authToken}, (err, user) => {
     if (err || !user) return res.status(401).json({error: 'unauthorised'})
 
-    req.currentUser = user
+    req.user = user
     next()
   })
 }
