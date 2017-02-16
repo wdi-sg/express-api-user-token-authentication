@@ -1,6 +1,7 @@
 const User = require('../models/user')
 const basicAuth = require('basic-auth')
 
+// This method checks for user authentication as custom headers User-Email and Auth-Token
 function userLoggedIn (req, res, next) {
   const userEmail = req.get('User-Email')
   const authToken = req.get('Auth-Token')

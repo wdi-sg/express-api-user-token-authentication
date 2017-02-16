@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Express API KEY Authentiation</title>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <style media="screen">
+      .hidden {
+        display:none;
+      }
+    </style>
+</head>
+<body>
+    <h1>Express API KEY Authentiation</h1>
+    <h2 id="heading">loading...</h2>
+    <div id="logged-out" class="hidden">
+        <h1>Register</h1>
+        <form id="register-form" method="post" action="#">
+            <p><input type="text" name="name" value="" placeholder="You"></p>
+            <p><input type="text" name="email" value="" placeholder="Email"></p>
+            <p><input type="password" name="password" value="" placeholder="Password"></p>
+            <p class="submit"><input type="submit" name="commit" value="Register"></p>
+        </form>
+        <h1>Login</h1>
+        <form id="login-form" method="post" action="#">
+            <p><input type="text" name="email" value="" placeholder="Email"></p>
+            <p><input type="password" name="password" value="" placeholder="Password"></p>
+            <p class="submit"><input type="submit" name="commit" value="Login"></p>
+        </form>
+    </div>
+
+    <div id="logged-in" class="hidden">
+        <h1 id="title">Logged In</h1>
+        <button id="logout">Logout</button>
+        <button id="secretBtn">Fetch Secret</button>
+        <p id="secret"></p>
+    </div>
+
+    <script>
+      var serverURL = window.location.origin
+      var currentUser = null
+
+      // load the user from the server. This ensures we have a logged in user
+      function loadUser () {
+        $.ajax({
+          type: 'GET',
+          url: serverURL + '/user',
+          beforeSend: function (xhr) {
+            xhr.setRequestHeader('User-Email', window.localStorage['email'])
+            xhr.setRequestHeader('Auth-Token', window.localStorage['auth_token'])
+          },
+          success: function (response) {
+            // asign the current user
+            currentUser = response
+            userAuthSuccess()
+          },
+          error: function (xhr, ajaxOptions, thrownError) {
+            userAuthFailed()
+          }
+        })
+      }
+
+      function register (formData) {
+        $.ajax({
+          type: 'POST',
+          url: serverURL + '/signup',
+          data: formData,
+          success: function (response) {
+            // success save the login details for later
+            window.localStorage.email = response.user.email
+            window.localStorage.auth_token = response.auth_token
+            currentUser = response.user
+            userAuthSuccess()
+          },
+          error: function (xhr, ajaxOptions, thrownError) {
+            console.log(xhr.status)
+            console.log(thrownError)
+            window.alert('Singup Failed')
+            userAuthFailed ()
+          }
+        })
+      }
+
+      function signin (formData) {
+        $.ajax({
+          type: 'POST',
+          url: serverURL + '/signin',
+          data: formData,
+          success: function (response) {
+            // success save the login details for later
+            window.localStorage.email = response.user.email
+            window.localStorage.auth_token = response.auth_token
+            currentUser = response.user
+            userAuthSuccess()
+          },
+          error: function (xhr, ajaxOptions, thrownError) {
+            // else output error
+            console.log(xhr.status)
+            console.log(thrownError)
+            window.alert('Login Failed')
+          }
+        })
+      }
+
+      function userAuthSuccess () {
+        $('#heading').text('Hello ' + currentUser.name)
+        $('#logged-in').show()
+        $('#logged-out').hide()
+      }
+      function userAuthFailed () {
+        // ensure logged-out by just clearing the localstorage
+        window.localStorage.removeItem('email')
+        window.localStorage.removeItem('auth_token')
+
+        $('#heading').text('Please Login or Register.')
+        $('#logged-in').hide()
+        $('#logged-out').show()
+      }
+
+      // we could add and remove event listeners but we'll just hide the buttons for now instead
+      $('#register-form').on('submit', function (event) {
+        event.preventDefault()
+        var formData = $(this).serialize()
+        register(formData)
+      })
+      $('#login-form').on('submit', function (event) {
+        event.preventDefault()
+        var formData = $(this).serialize()
+        signin(formData)
+      })
+      $('#logout').click(function (event) {
+        event.preventDefault()
+        // just reuse the user auth failed function to clear local storage and show login boxes
+        userAuthFailed ()
+      })
+      $('#secretBtn').click(function(){
+          $.ajax({
+            type: 'GET',
+            url: serverURL + '/users-secret',
+            beforeSend: function (xhr) {
+              xhr.setRequestHeader('User-Email', window.localStorage['email'])
+              xhr.setRequestHeader('Auth-Token', window.localStorage['auth_token'])
+            },
+            success: function (response) {
+                console.log(response.message)
+                $('#secret').text(response.message)
+            },
+            error: function(){
+                $('#secret').text('Cannot Access Secret Information.')
+            }
+        })
+      })
+      // If local storage then load user, else call userAuthFailed
+      if (window.localStorage['email'] && window.localStorage['auth_token']) {
+        loadUser()
+      } else {
+        userAuthFailed()
+      }
+    </script>
+</body>
+</html>
